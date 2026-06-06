@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>課題データ集計・分析レポート</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "游ゴシック", "Yu Gothic", "Meiryo", sans-serif; background: #f4f6fb; color: #333; }
+
+    /* ヘッダー */
+    header {
+      background: linear-gradient(135deg, #1a2f5e 0%, #2e75b6 100%);
+      color: #fff; padding: 48px 40px 36px;
+    }
+    header .label { font-size: 12px; letter-spacing: 2px; color: #a8c4e0; margin-bottom: 10px; }
+    header h1 { font-size: 2rem; font-weight: 700; line-height: 1.3; }
+    header p  { margin-top: 10px; font-size: 0.95rem; color: #c8ddf0; }
+
+    /* KPIバー */
+    .kpi-bar {
+      display: flex; flex-wrap: wrap; gap: 16px;
+      background: #fff; padding: 24px 40px;
+      border-bottom: 3px solid #2e75b6;
+    }
+    .kpi { flex: 1 1 160px; }
+    .kpi .label { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .kpi .value { font-size: 1.6rem; font-weight: 700; color: #1a2f5e; }
+    .kpi .value.green { color: #1e7a45; }
+
+    /* セクション */
+    .section { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+    .section-title {
+      font-size: 1.25rem; font-weight: 700; color: #1a2f5e;
+      border-left: 5px solid #2e75b6; padding-left: 14px; margin-bottom: 24px;
+    }
+    .section-sub { font-size: 0.82rem; color: #888; margin-left: 6px; font-weight: 400; }
+
+    /* グラフ＋解説カード */
+    .graph-card {
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      display: flex; flex-wrap: wrap; overflow: hidden; margin-bottom: 32px;
+    }
+    .graph-card img { flex: 1 1 560px; width: 100%; max-width: 680px; object-fit: contain; padding: 16px; }
+    .graph-note {
+      flex: 1 1 260px; background: #f5f8ff;
+      padding: 24px 20px; border-left: 1px solid #dce8f8; min-width: 220px;
+    }
+    .graph-note h3 { font-size: 0.9rem; color: #2e75b6; margin-bottom: 12px; }
+    .graph-note ul { list-style: none; }
+    .graph-note ul li {
+      font-size: 0.85rem; color: #555; padding: 5px 0;
+      border-bottom: 1px dashed #dde; line-height: 1.6;
+    }
+    .graph-note ul li:last-child { border-bottom: none; }
+    .graph-note ul li::before { content: "▶ "; color: #2e75b6; font-size: 0.75rem; }
+
+    /* サマリーカード3列 */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px; }
+    .summary-card { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+    .summary-card .card-header { padding: 12px 18px; color: #fff; font-weight: 700; font-size: 1rem; }
+    .summary-card .card-body { background: #fff; padding: 16px 18px; font-size: 0.85rem; color: #555; line-height: 1.9; }
+    .summary-card .card-body strong { color: #333; }
+
+    /* テーブル */
+    .data-table { width: 100%; border-collapse: collapse; background: #fff;
+      border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 32px; }
+    .data-table th { background: #1a2f5e; color: #fff; padding: 11px 14px; font-size: 0.85rem; text-align: center; }
+    .data-table td { padding: 10px 14px; font-size: 0.84rem; text-align: center; border-bottom: 1px solid #eee; }
+    .data-table tr:nth-child(even) td { background: #f5f8ff; }
+    .data-table td:last-child { text-align: left; }
+
+    /* アクションリスト */
+    .action-list { display: flex; flex-direction: column; gap: 14px; }
+    .action-item { display: flex; gap: 0; border-radius: 10px; overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+    .action-priority { width: 60px; min-width: 60px; display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: #fff; writing-mode: horizontal-tb; }
+    .action-body { background: #fff; padding: 14px 18px; flex: 1; }
+    .action-body h4 { font-size: 0.95rem; color: #1a2f5e; margin-bottom: 5px; }
+    .action-body p  { font-size: 0.84rem; color: #666; line-height: 1.7; }
+
+    footer { text-align: center; padding: 32px; color: #aaa; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="label">MARKETING ANALYSIS REPORT</div>
+  <h1>課題データ集計・分析レポート</h1>
+  <p>課題2（個人別スコア推移）／ 課題3（所属別パフォーマンス）　2024年9月</p>
+</header>
+
+<!-- KPI -->
+<div class="kpi-bar">
+  <div class="kpi"><div class="label">分析対象者数（課題3）</div><div class="value">35名</div></div>
+  <div class="kpi"><div class="label">全体平均スコア（課題3）</div><div class="value">84.9点</div></div>
+  <div class="kpi"><div class="label">分析対象者数（課題2）</div><div class="value">5名</div></div>
+  <div class="kpi"><div class="label">期間中の全体成長幅</div><div class="value">+9.5点</div></div>
+  <div class="kpi"><div class="label">最大成長者</div><div class="value green">田中一郎 +9.3点</div></div>
+</div>
+
+<!-- 課題3 -->
+<div class="section">
+  <h2 class="section-title">課題3｜所属別パフォーマンス分析</h2>
+
+  <div class="graph-card">
+    <img src="graph1_pie.png" alt="所属別参加者数ドーナツグラフ">
+    <div class="graph-note">
+      <h3>参加者構成のポイント</h3>
+      <ul>
+        <li>営業・開発が各10名（29%）で最多</li>
+        <li>管理8名（23%）、人事7名（20%）</li>
+        <li>営業＋開発で全体の約6割を占める</li>
+        <li>人事は参加者数も最少で、少人数での均質な低スコアは個別介入が有効</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="graph-card">
+    <img src="graph2_bar.png" alt="所属別スコア比較グループ棒グラフ">
+    <div class="graph-note">
+      <h3>スコア比較の着眼点</h3>
+      <ul>
+        <li>1位 開発 88.9点（最安定）</li>
+        <li>2位 管理 87.1点</li>
+        <li>3位 営業 83.0点（最大ばらつき）</li>
+        <li>4位 人事 79.3点（全体比−5.6点）</li>
+        <li>営業は最高93点〜最低70点と23点差。2極化が深刻</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="graph-card">
+    <img src="graph3_histogram.png" alt="所属別スコア分布ヒストグラム">
+    <div class="graph-note">
+      <h3>分布形状から読む組織状態</h3>
+      <ul>
+        <li>全体平均84.9点・中央値86点</li>
+        <li>開発・管理は90点台に集中（高水準安定）</li>
+        <li>人事は75〜82点帯に全員が圧縮</li>
+        <li>人事の分布は外部刺激なしに自然改善しにくい「均質低水準」状態</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:1rem;color:#555;margin-bottom:16px;">所属別 強み・課題・リスク</h3>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="card-header" style="background:#1e7a45;">強み（開発・管理）</div>
+      <div class="card-body">
+        <strong>開発：</strong>平均88.9点・標準偏差3.57<br>
+        ハイパフォーマー率40%で最高水準<br><br>
+        <strong>管理：</strong>平均87.1点・標準偏差5.62<br>
+        均整のとれた高水準チーム<br><br>
+        <strong>施策：</strong>成功パターンをマニュアル化し<br>
+        他部門へ横展開。高スコア者をメンターに。
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-header" style="background:#bf6c00;">課題（人事）</div>
+      <div class="card-body">
+        <strong>平均79.3点</strong>（全体比 −5.6点）<br>
+        ハイパフォーマー：0名<br>
+        標準偏差2.29 → 全員が同水準に均質化<br><br>
+        <strong>なぜ問題か：</strong>人事が弱いと採用品質・<br>
+        組織施策・人材育成に連鎖影響。<br><br>
+        <strong>施策：</strong>外部研修・個別コーチングを優先投入
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-header" style="background:#c00000;">リスク（営業）</div>
+      <div class="card-body">
+        <strong>標準偏差7.48</strong>（全部門で最大）<br>
+        最低70点 ↔ 最高93点（差23点）<br>
+        ローパフォーマー4名（全部門最多）<br><br>
+        <strong>なぜ問題か：</strong>営業力の個人依存＝<br>
+        売上の予測可能性が低下。<br><br>
+        <strong>施策：</strong>トップ営業のナレッジ移転・OJT
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 課題2 -->
+<div class="section">
+  <h2 class="section-title">課題2｜個人別スコア推移分析</h2>
+
+  <div class="graph-card">
+    <img src="graph4_trend.png" alt="日別スコア成長トレンド">
+    <div class="graph-note">
+      <h3>成長トレンドの読み方</h3>
+      <ul>
+        <li>全体平均：9/1 80.3点 → 9/5 89.8点（+9.5点）</li>
+        <li>田中一郎（+9.3点）：中盤以降に急加速するタイプ</li>
+        <li>高橋花子（−2.0点）：初日92点超だが後半に微減。天井効果の兆候</li>
+        <li>高初期スコア者には難易度の高い発展コンテンツが必要</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="graph-card">
+    <img src="graph5_heatmap.png" alt="受講者×科目スコアヒートマップ">
+    <div class="graph-note">
+      <h3>科目別・個人別の弱点マップ</h3>
+      <ul>
+        <li>英語86.7点が最高、国語83.7点が最低</li>
+        <li>佐藤次郎：国語65点・社会68点（文系科目に集中した弱点）</li>
+        <li>鈴木花子：理科80点が他科目より低い</li>
+        <li>弱点は「人×科目」で特定し個別フォローが最効率</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="graph-card">
+    <img src="graph6_boxplot_growth.png" alt="スコア分布・成長幅ランキング">
+    <div class="graph-note">
+      <h3>分布・成長幅のポイント</h3>
+      <ul>
+        <li>田中一郎の成長幅+9.3点が突出。継続投資のROI最大</li>
+        <li>高橋花子は分布の上限付近に張り付き。天井効果が明確</li>
+        <li>佐藤次郎は分布が低位かつ狭い。個別介入が必要</li>
+        <li>鈴木・山田は安定成長で今後も伸びしろあり</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:1rem;color:#555;margin-bottom:16px;">受講者別パフォーマンス詳細</h3>
+  <table class="data-table">
+    <thead>
+      <tr><th>名前</th><th>平均</th><th>成長幅</th><th>強み科目</th><th>弱点科目</th><th>推奨施策</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>高橋花子</td><td>92.0点</td><td style="color:#c00">▼ −2.0点</td><td>理科96点</td><td>後半失速</td><td>発展コンテンツ・上位資格挑戦で天井突破を狙う</td></tr>
+      <tr><td>鈴木花子</td><td>88.6点</td><td style="color:#1e7a45">▲ +4.7点</td><td>英語92点</td><td>理科80点</td><td>理科強化で全科目90点台が射程圏内</td></tr>
+      <tr><td>田中一郎</td><td>87.5点</td><td style="color:#1e7a45">▲ +9.3点</td><td>社会90点</td><td>数学83点</td><td>継続投資のROI最大。数学底上げで90点台狙い</td></tr>
+      <tr><td>山田太郎</td><td>83.6点</td><td style="color:#1e7a45">▲ +3.0点</td><td>国語91点</td><td>国語75点※</td><td>得意科目の安定化と苦手科目の反復練習を</td></tr>
+      <tr><td>佐藤次郎</td><td>73.1点</td><td style="color:#1e7a45">▲ +6.0点</td><td>英語80点</td><td>国語65点</td><td>文系科目への個別集中フォロー必須</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 推奨アクション -->
+<div class="section">
+  <h2 class="section-title">統合インサイト｜優先推奨アクション</h2>
+  <div class="action-list">
+    <div class="action-item">
+      <div class="action-priority" style="background:#c00000;">★★★</div>
+      <div class="action-body">
+        <h4>人事部門への集中支援（最優先）</h4>
+        <p>全体平均比 −5.6点。7名全員が低水準に均質化しており自然回復は困難。外部研修・個別コーチングを即時投入。人事の改善は採用品質 → 組織力 → 全部門のパフォーマンスに連鎖する。</p>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-priority" style="background:#c00000;">★★★</div>
+      <div class="action-body">
+        <h4>営業ローパフォーマー4名の底上げ（最優先）</h4>
+        <p>ローパフォーマーが全部門最多で最低70点と水準も低い。トップ営業（93点）のナレッジをOJT・ロープレで移転。営業力の組織化が直接的な収益安定化につながる。</p>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-priority" style="background:#2e75b6;">★★</div>
+      <div class="action-body">
+        <h4>田中一郎への継続投資</h4>
+        <p>成長幅+9.3点は全受講者最大。学習適性が高く、今後のプログラム継続でさらなる成長が期待できる。組織の次世代リーダー候補として育成ロードマップを設計する。</p>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-priority" style="background:#2e75b6;">★★</div>
+      <div class="action-body">
+        <h4>高橋花子に発展コンテンツを提供</h4>
+        <p>初日から92点超の実力を持つが後半に−2点の微減。天井効果・慣れによる失速を防ぐため、難易度の高い応用課題や外部認定試験への挑戦で学習意欲を維持する。</p>
+      </div>
+    </div>
+    <div class="action-item">
+      <div class="action-priority" style="background:#666;">★</div>
+      <div class="action-body">
+        <h4>開発・管理のナレッジを全社横展開</h4>
+        <p>高スコア・低ばらつきの両部門のメソッドをマニュアル・社内勉強会として可視化。特に営業・人事への水平展開が全体平均を84.9点→90点へ押し上げる近道となる。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>課題データ集計・分析レポート　2024年9月　マーケティング観点分析</footer>
+
+</body>
+</html>
